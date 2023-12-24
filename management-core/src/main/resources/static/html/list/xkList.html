@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>选课管理</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/management.css">
+</head>
+<body>
+
+<div id="app">
+
+    <el-container>
+        <el-aside>
+
+            <!--左菜单-->
+            <el-menu
+                    :default-active="activeIndex"
+                    @select="handleSelect"
+                    background-color="#363535"
+                    text-color="#fff"
+                    active-text-color="#ffd04b">
+                <el-menu-item v-for="item in menuList" :key="item.mid" :index="backendUrl + item.url">
+              <span slot="title">
+                   {{item.mname}}
+              </span>
+                </el-menu-item>
+            </el-menu>
+
+        </el-aside>
+
+        <el-container>
+
+            <el-header>
+                <el-row>
+                    <el-col :span="6">
+                        <h1 style="color: #000000;">{{title}}</h1>
+                    </el-col>
+                    <el-col :span="15"></el-col>
+
+
+                    <!--消息-->
+                    <el-col :span="1">
+                        <el-badge :value="msgNum" class="item">
+                            <div  @click="dialogMsgVisible = true">
+                                <i class="el-icon-bell menu-icon"></i>
+                            </div>
+                        </el-badge>
+                    </el-col>
+
+                    <!--邮箱-->
+                    <el-dialog
+                            title="系统消息"
+                            :visible.sync="dialogMsgVisible"
+                            width="70%">
+                        <div v-if="systemMsgList === null || systemMsgList.length === 0">
+                            <el-empty description="暂无邮件"></el-empty>
+                        </div>
+                        <div v-else>
+
+                            <el-container id="msgContainer">
+                                <el-aside id="msgAside">
+
+                                    <div v-for="(item,index) in systemMsgList">
+                                        <div class="msgAsideDiv">
+                                            <el-badge class="newMsg" v-if="item.status === msgStatusUnRead" value="new" class="item">
+                                            </el-badge>
+                                            <div @click="readMsg(item,index)">
+                                                <el-row>
+                                                    <el-col :span="8" class="msgAsideTitlePadding"></el-col>
+                                                    <el-col :span="8" class="msgAsideTitlePadding">
+                                                        <span><b class="msgAsideTitle">{{item.title}}</b></span>
+                                                    </el-col>
+                                                    <el-col :span="6" class="msgAsideTitlePadding"></el-col>
+                                                    <el-col :span="4" class="msgAsideTitlePadding">
+                                                        <i class="el-icon-delete" @click="deleteMsg(item,index)"></i>
+                                                    </el-col>
+                                                </el-row>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </el-aside>
+                                <el-main v-if="msg != null">
+                                    <el-card class="box-card">
+                                        <el-row>
+                                            <el-col :span="6"><b>标题:</b> <span>{{msg.title}}</span></el-col>
+                                            <el-col :span="2"></el-col>
+                                            <el-col :span="6"><b>发布人:</b> <span>{{msg.sendUsername}}</span></el-col>
+                                            <el-col :span="2"></el-col>
+                                            <el-col :span="10"><b>发布日期:</b> <span>{{msg.sendTime}}</span></el-col>
+                                        </el-row>
+                                    </el-card>
+                                    <el-divider></el-divider>
+                                    <el-card class="box-card">
+                                        <el-row>
+                                            <span>{{msg.context}}</span>
+                                        </el-row>
+                                    </el-card>
+                                </el-main>
+                            </el-container>
+
+                        </div>
+
+                    </el-dialog>
+
+                    <!--配置-->
+                    <el-col :span="1">
+                        <template>
+                            <el-popover
+                                    placement="top-start"
+                                    width="150"
+                                    trigger="hover">
+                                <el-row>
+                                    <el-col>
+                                        <span>{{username}}</span>
+                                    </el-col>
+                                </el-row>
+                                <el-row><el-col><el-divider></el-divider></el-col></el-row>
+                                <el-row>
+                                    <el-col>
+                                        <el-link type="primary" :href="`/html/userConfig.html`">用户中心</el-link>
+                                    </el-col>
+                                </el-row>
+                                <el-row><el-col><el-divider></el-divider></el-col></el-row>
+                                <el-row>
+                                    <el-col>
+                                        <el-link v-if="role === '管理员'" type="primary" :href="`/html/msg.html`">发布公告</el-link>
+                                    </el-col>
+                                </el-row>
+                                <el-row><el-col><el-divider v-if="role === '管理员'"></el-divider></el-col></el-row>
+                                <el-row>
+                                    <el-col>
+                                        <el-link type="danger" @click="logout">退出登录</el-link>
+                                    </el-col>
+                                </el-row>
+                                <i class="el-icon-setting menu-icon" slot="reference"></i>
+                            </el-popover>
+                        </template>
+
+                    </el-col>
+
+                </el-row>
+            </el-header>
+
+            <el-main>
+                <el-row>
+                    <el-col :span="6">
+                        <el-input
+                                v-model="likeName"
+                                size="mini"
+                                placeholder="查询"/>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-button size="mini" @click="searchXK">
+                            <i class="el-icon-search"></i>查询
+                        </el-button>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-select size="mini" v-model="searchFlag" placeholder="请选择查询方式">
+                            <el-option
+                                    v-for="item in options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+
+                    <el-col :span="3">
+                        <el-checkbox  v-model="precise" value="true">
+                            精确查询
+                        </el-checkbox>
+                    </el-col>
+                    <el-col :span="5"></el-col>
+                    <el-col :span="5">
+                        <el-button type="success" size="mini" @click="addXK">添加选课</el-button>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-table
+                            :data="xkList"
+                            style="width: 100%">
+                        <el-table-column
+                                label="选课号"
+                                prop="xkId">
+                        </el-table-column>
+                        <el-table-column
+                                label="选课学生"
+                                prop="sname">
+                        </el-table-column>
+                        <el-table-column
+                                label="授课编号"
+                                prop="skId">
+                        </el-table-column>
+                        <el-table-column
+                                label="授课课程"
+                                prop="lname">
+                        </el-table-column>
+                        <el-table-column
+                                label="授课教师"
+                                prop="tname">
+                        </el-table-column>
+                        <el-table-column
+                                label="学期"
+                                prop="term">
+                        </el-table-column>
+                        <el-table-column
+                                label="分数"
+                                prop="score">
+                        </el-table-column>
+
+                        <!--表头-->
+                        <el-table-column
+                                align="right">
+                            <template slot="header" slot-scope="scope">
+                                操作
+                            </template>
+
+                            <template slot-scope="scope">
+                                <el-button
+                                        size="mini"
+                                        type="primary"
+                                        @click="editXK(scope.row.xkId)">编辑</el-button>
+                                <el-button
+                                        size="mini"
+                                        type="danger"
+                                        @click="deleteXK(scope.row.xkId)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+
+            </el-main>
+
+            <el-footer>
+                  <span id="page">
+                    <span v-if="currentPage == 1">
+                        <el-button disabled>上一页</el-button>
+                    </span>
+                    <span v-else>
+                        <el-button @click="getXKPage(currentPage-1)">上一页</el-button>
+                    </span>
+                    <span>
+                        {{currentPage}}/{{lastPage}}
+                    </span>
+                    <span v-if="currentPage == lastPage || lastPage == 0">
+                        <el-button disabled>下一页</el-button>
+                    </span>
+                    <span v-else>
+                        <el-button @click="getXKPage(currentPage+1)">下一页</el-button>
+                    </span>
+                    分页条目数:
+                    <el-select v-model="pageSize" @change="getXKPage(currentPage)">
+                        <el-option :key="item.value"
+                                   :value="item.value"
+                                   :label="item.label"
+                                   v-for="item in pageSizeInterval"></el-option>
+                    </el-select>
+                </span>
+            </el-footer>
+        </el-container>
+    </el-container>
+
+</div>
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+
+
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                msgStatusUnRead: SYSTEM_MSG_READ_STATUS_UNREAD,
+
+                //msg
+                systemMsgList:null,
+                msg:null,
+                msgNum:null,
+
+                username:null,
+                role:null,
+
+                dialogMsgVisible:false,
+
+                title:`${TITLE}`,
+                backendUrl:BACKEND_URL,
+
+                /*menu*/
+                activeIndex:location.href,
+                menuList:[],
+
+                /*page*/
+                xkList:null,
+                currentPage:null,
+                pageSize:5,
+                totalCount:null,
+                lastPage:null,
+                pageSizeInterval:[{value:5,label:5},{value:10,label:10},{value:15,label:15},{value:20,label:20}],
+
+                /*search*/
+                searchFlag:'sidFlag',
+                likeName:'',
+                precise:false,
+                options:[
+                    {value:'sidFlag',label:'学号'},
+                    {value:'skIdFlag',label:'授课号'},
+                    {value: 'xkIdFlag',label:'选课号'}
+                ]
+
+            }
+        },
+        methods: {
+            deleteMsg(item,index){
+                this.systemMsgList.splice(index,1);
+                this.msgNum--;
+                if (this.msgNum === 0){
+                    this.msgNum = null;
+                }
+                this.msg = null;
+                axios.post(
+                    `${BACKEND_URL}/systemMsg/delete?msgReadId=${item.id}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            readMsg(item,index){
+                this.systemMsgList[index].status = SYSTEM_MSG_READ_STATUS_READ;
+                this.msg = item;
+                axios.post(
+                    `${BACKEND_URL}/systemMsg/read?msgReadId=${item.id}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            handleSelect(url) {
+                location.href = url;
+            },
+            searchXK(){
+                axios.post(
+                    `${BACKEND_URL}/xk/search?currentPage=${this.currentPage}&pageSize=${this.pageSize}&likeName=${this.likeName}&flag=${this.searchFlag}&precise=${this.precise}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.xkList = resp.data.data.dataList;
+                        this.totalCount = resp.data.data.totalCount;
+                        this.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            addXK(){
+                location.href=`${BACKEND_URL}/html/add/addXK.html`
+            },
+            editXK(xkId){
+                sessionStorage.setItem("editXKId",xkId);
+                location.href=`${BACKEND_URL}/html/edit/editXK.html`
+            },
+            deleteXK(xkId){
+                this.$confirm('确认删除?(这将删除选课相关的所有数据)', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+
+                    axios.post(
+                        `${BACKEND_URL}/xk/delete`,
+                        {
+                            xkId:xkId
+                        }
+                    ).then((resp)=>{
+                        if (resp.data.code === STATUS_CODE_SUCCESS){
+                            this.$message({
+                                type: 'success',
+                                message: '删除成功!'
+                            });
+                            this.getXKPage(this.currentPage);
+                        }
+                        if (resp.data.code === STATUS_CODE_FAIL){
+                            this.$message.error(resp.data.msg);
+                        }
+                    });
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+
+            },
+            getXKPage(page){
+                this.currentPage = page;
+                if (this.likeName != null){
+                    this.searchXK();
+                    return;
+                }
+            },
+            initSystemMsgList(){
+                axios.get(
+                    `${BACKEND_URL}/systemMsg/list`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.systemMsgList = resp.data.data;
+                        let num = 0;
+                        for (const key in this.systemMsgList) {
+                            if (this.systemMsgList[key].status === SYSTEM_MSG_READ_STATUS_UNREAD){
+                                num++;
+                            }
+                        }
+                        if (num === 0){
+                            this.msgNum = null;
+                        }else{
+                            this.msgNum = num;
+                        }
+
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            initXKList(){
+                this.xkList = [];
+                this.getXKPage(1);
+            },
+            initMenuList(){
+                axios.get(
+                    `${BACKEND_URL}/menu/list`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.menuList = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            logout(){
+                axios.post(
+                    `${BACKEND_URL}/user/logout`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        location.href=`${BACKEND_URL}/html/login.html`;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            }
+        },
+        mounted() {
+            this.role = sessionStorage.getItem(KEY_USER_ROLE)
+            this.username = sessionStorage.getItem(KEY_USERNAME);
+            this.initXKList();
+            this.initMenuList();
+            this.initSystemMsgList();
+        },
+        created() {},
+    })
+
+
+
+</script>

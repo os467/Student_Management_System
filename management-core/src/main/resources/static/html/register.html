@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册界面</title>
+    <link rel="stylesheet" href="../css/management.css">
+</head>
+<body>
+
+<div id="app">
+    <table>
+        <h1 align="center">
+            {{title}}
+        </h1>
+        <tr>
+            <td>用户名</td>
+            <td>
+                <input type="text" v-model="form.username">
+            </td>
+        </tr>
+        <tr>
+            <td>密码</td>
+            <td>
+                <input type="password" v-model="form.password">
+            </td>
+        </tr>
+        <tr>
+            <td>重复密码</td>
+            <td>
+                <input type="password" v-model="form.passwordC">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <button @click="register" class="add" style="margin-left: 45%">注册</button>
+                <a style="padding-left: 40%" @click="toLogin">登录</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
+
+<script src="../util/vue.js"></script>
+<script src="../util/axios.js"></script>
+<script src="../util/md5.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/myaxios.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                form:{
+                    username:null,
+                    password:null,
+                    passwordC:null
+                },
+                title:`${TITLE}`,
+            }
+        },
+        methods: {
+            register(){
+                this.$message({
+                    type: 'warning',
+                    message: '暂时未对外界开放注册接口，请联系管理员获取账户!'
+                });
+                return;
+                for (const key in this.form) {
+                    if (this.form[key] == null){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                let password = this.form.password;
+                let passwordC = this.form.passwordC;
+                if (password != passwordC){
+                    this.$message({
+                        type: 'warning',
+                        message: '两次输入密码不一致!'
+                    });
+                    return;
+                }
+                axios.post(`${BACKEND_URL}/user/register`,
+                    {
+                        username:this.form.username,
+                        password:hex_md5(password),
+                        /*角色默认为学生*/
+                        rid:3
+                    }
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        //注册成功
+                        location.href=`${BACKEND_URL}/html/login.html`;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        //登录失败
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            toLogin(){
+                location.href=`${BACKEND_URL}/html/login.html`;
+            }
+        },
+        mounted() {
+        },
+        created() {},
+    })
+
+
+
+</script>

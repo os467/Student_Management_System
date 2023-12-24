@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户配置</title>
+    <link rel="stylesheet" href="../css/element.css">
+    <link rel="stylesheet" href="../../css/userConfig.css">
+</head>
+<body>
+
+
+<div id="app">
+
+
+    <el-dialog
+            title="更改密码"
+            :visible.sync="dialogPasswordVisible"
+            width="30%">
+
+        <el-row>
+            <el-col>
+                <el-form>
+                    <el-form-item label="新密码">
+                        <el-input type="password" v-model="form.password"></el-input>
+                    </el-form-item>
+
+                    <el-form-item label="重复新密码">
+                        <el-input type="password" v-model="confirmPassword"></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-col>
+        </el-row>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogPasswordClose">取 消</el-button>
+            <el-button type="primary" @click="submitForm">修改</el-button>
+         </span>
+    </el-dialog>
+
+
+    <el-dialog
+            title="更改头像"
+            :visible.sync="dialogAvatarVisible"
+            width="30%">
+
+        <el-row>
+            <el-col>
+                <el-upload
+                        class="avatar-uploader"
+                        ref="upload"
+                        :action="uploadUrl"
+                        :auto-upload="false"
+                        :show-file-list="false"
+                        :on-success="handleAvatarSuccess"
+                        :on-change="handleLicensePreview">
+                    <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                </el-upload>
+            </el-col>
+        </el-row>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogAvatarClose">取 消</el-button>
+            <el-button type="primary" @click="submitAvatar">上传</el-button>
+         </span>
+    </el-dialog>
+
+
+
+   <div id="box-card-container">
+       <el-row>
+           <el-col>
+               <el-card class="box-card" with="200" shadow="always">
+                   <el-row>
+                       <el-col>
+                           <div @click="dialogAvatarVisible = true">
+                               <el-avatar id="avatar"
+                                          shape="square"
+                                          :size="100"
+                                          :src="avatarUrl"></el-avatar>
+                           </div>
+                       </el-col>
+                   </el-row>
+                   <el-row><el-col><el-divider></el-divider></el-col></el-row>
+                   <el-row>
+                       <el-col :span="6"></el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <span><b>用户</b></span>
+                           </div>
+                       </el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <span>{{username}}</span>
+                           </div>
+                       </el-col>
+                   </el-row>
+                   <el-row>
+                       <el-col :span="6"></el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <span><b>权限组</b></span>
+                           </div>
+                       </el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <span>{{role}}</span>
+                           </div>
+                       </el-col>
+                   </el-row>
+                   <el-row>
+                       <el-col :span="6"></el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <span><b>密码</b></span>
+                           </div>
+                       </el-col>
+                       <el-col :span="10">
+                           <div class="left-text">
+                               <el-button plain @click="dialogPasswordVisible = true">修改密码</el-button>
+                           </div>
+                       </el-col>
+                   </el-row>
+
+                   <el-page-header @back="goBack">
+                   </el-page-header>
+
+               </el-card>
+           </el-col>
+       </el-row>
+   </div>
+
+</div>
+
+</body>
+</html>
+
+<script src="../util/vue.js"></script>
+<script src="../util/axios.js"></script>
+<script src="../util/md5.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/myaxios.js"></script>
+<script src="../util/element.js"></script>
+<script src="../js/base64Utils.js"></script>
+
+
+<script>
+
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                //用户信息
+                username:null,
+                avatarUrl:null,
+                role:null,
+
+
+                //头像上传地址
+                uploadUrl:`${BACKEND_URL}/file/uploadIMG`,
+                //上传头像图片
+                imageUrl: '',
+
+                //对话框是否可见
+                dialogAvatarVisible: false,
+                dialogPasswordVisible:false,
+
+                form:{
+                    password:null
+                },
+                confirmPassword: null,
+
+                lock:false
+
+            }
+        },
+        methods: {
+            goBack(){
+              location.href=`${BACKEND_URL}/html/list/studentList.html`;
+            },
+
+            dialogAvatarClose(){
+                //重置数据
+                this.imageUrl = null;
+                this.dialogAvatarVisible = false;
+            },
+
+            dialogPasswordClose(){
+                //重置数据
+                this.confirmPassword = null;
+                this.form.password = null;
+                this.dialogPasswordVisible = false;
+            },
+
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == ''){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                if (this.confirmPassword != this.form.password){
+                    this.$message({
+                        type: 'warning',
+                        message: '两次输入密码不一致!'
+                    });
+                    return;
+                }
+                axios.post(
+                    `${BACKEND_URL}/user/changePassword`,
+                    {
+                        password:hex_md5(this.form.password)
+                    }
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '修改成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+                this.dialogPasswordClose();
+            },
+
+            submitAvatar(){
+                //上传文件到服务器
+                this.$refs.upload.submit();
+                //关闭对话框
+                this.dialogAvatarClose();
+            },
+
+            //上传前预览
+            handleLicensePreview(file){
+
+                const isJPG = file.raw.type === 'image/jpeg';
+                const isPNG = file.raw.type === 'image/png';
+                const isLt2M = file.raw.size / 1024 / 1024 < 5;
+
+                if (!(isJPG || isPNG)) {
+                    this.$message.error('上传头像图片格式非法!');
+                    return false;
+                }
+
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 5MB!');
+                    return false;
+                }
+
+                //创建图像URL
+                this.imageUrl = URL.createObjectURL(file.raw);
+                return true;
+            },
+
+            //处理上传成功
+            handleAvatarSuccess(res, file) {
+                if (res.code === STATUS_CODE_SUCCESS){
+                    this.$message({
+                        message:'头像上传成功!',
+                        type:'success'
+                    })
+                    //查询更新的头像地址
+                    axios.get(`${BACKEND_URL}/user/getUserAvatarUrl`).then(
+                        (resp)=>{
+                            if (resp.data.code === STATUS_CODE_SUCCESS){
+                                sessionStorage.setItem(KEY_AVATAR_URL,resp.data.data);
+                                this.avatarUrl = resp.data.data;
+                            }
+                            if (resp.data.code === STATUS_CODE_FAIL){
+                                this.$message.error(resp.data.msg);
+                            }
+                        }
+                    );
+                }
+            },
+
+        },
+        mounted() {
+            this.username = sessionStorage.getItem(KEY_USERNAME);
+            this.avatarUrl = sessionStorage.getItem(KEY_AVATAR_URL);
+            this.role = sessionStorage.getItem(KEY_USER_ROLE);
+        },
+        created() {
+        },
+    })
+
+
+
+</script>
+
+

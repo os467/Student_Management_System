@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.UserMapper">
+    <resultMap id="User" type="pers.os467.management.entity.User">
+        <id property="uid" column="uid"></id>
+        <result property="password" column="password"></result>
+        <result property="rid" column="rid"></result>
+        <result property="username" column="username"></result>
+        <result property="avatarUrl" column="avatar_url"></result>
+    </resultMap>
+    <insert id="addUser">
+        insert into user(
+                            username,
+                            password,
+                            rid,
+                            avatar_url
+        )values (
+                 #{user.username},
+                 #{user.password},
+                 #{user.rid},
+                 #{user.avatarUrl}
+                        );
+    </insert>
+
+    <update id="updateUser">
+        update user set username = #{user.username},
+                        password = #{user.password},
+                        rid = #{user.rid}
+        where uid = #{user.uid};
+    </update>
+    <update id="changePassword">
+        update user set password = #{password}
+        where uid = #{uid};
+    </update>
+    <update id="updateUserAvatar">
+        update user set avatar_url = #{avatarUrl}
+        where uid = #{uid};
+    </update>
+
+    <delete id="deleteUserByUid">
+        delete from user where uid = #{uid};
+    </delete>
+
+    <select id="getUserByUid" resultMap="User">
+        select * from user where uid = #{uid};
+    </select>
+    <select id="getUserListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from user where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getUserListByLikeName" resultMap="User">
+        select * from user where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+         limit #{startIndex},#{pageSize}
+    </select>
+    <select id="loginUser" resultMap="User">
+        select * from user where username = #{username} and password = #{password};
+    </select>
+    <select id="getUserByUserName" resultMap="User">
+        select * from user where username = #{username};
+    </select>
+    <select id="searchAvatarUrl" resultType="java.lang.String">
+        select avatar_url from user where username = #{username};
+    </select>
+    <select id="getUserByIds" resultType="pers.os467.management.entity.User">
+        select * from user where uid in
+    </select>
+    <select id="getUsernameMapByIds" resultType="java.util.Map" resultMap="User">
+        select uid,username from user where uid in
+        <foreach collection="ids" open="(" separator="," close=")" item="id" index="index">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getUserIdListByRidList" resultType="pers.os467.management.entity.User">
+        select uid from user where rid in
+        <foreach collection="rids" open="(" separator="," close=")" item="rid" index="index">
+            #{rid}
+        </foreach>
+    </select>
+</mapper>

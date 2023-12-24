@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.SystemMsgReadMapper">
+
+    <resultMap id="SystemMsgRead" type="pers.os467.management.entity.SystemMsgRead">
+        <id column="id" property="id"></id>
+        <result column="uid" property="uid"></result>
+        <result column="msg_id" property="msgId"></result>
+        <result column="status" property="status"></result>
+    </resultMap>
+    <insert id="addSystemReads" parameterType="java.util.List">
+        insert into system_msg_read(`uid`,`msg_id`,`status`)values
+        <foreach collection="systemMsgReads" item="systemMsgRead" separator="," index="index">
+            (#{systemMsgRead.uid},#{systemMsgRead.msgId},#{systemMsgRead.status})
+        </foreach>
+    </insert>
+    <update id="updateSystemMsgReadStatus">
+        update system_msg_read set status = #{readStatus} where uid = #{uid} and id = #{msgReadId}
+    </update>
+
+    <select id="getSystemMsgReadList" resultMap="SystemMsgRead">
+        select id,msg_id,status from system_msg_read where
+        uid = #{uid} and status in
+        <foreach collection="statusList"
+                 index="index" item="status"
+                 open="(" separator="," close=")">
+            #{status}
+        </foreach>;
+    </select>
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.XKMapper">
+    <resultMap id="XK" type="pers.os467.management.entity.XK">
+        <id property="xkId" column="xk_id"></id>
+        <result property="skId" column="sk_id"></result>
+        <result property="score" column="score"></result>
+        <result property="sid" column="sid"></result>
+        <result property="term" column="term"></result>
+    </resultMap>
+    <insert id="addXK">
+        insert into xk(
+            sid,
+            sk_id,
+            term,
+            score
+        )values (
+                    #{xk.sid},
+                    #{xk.skId},
+                    #{xk.term},
+                    #{xk.score}
+                );
+    </insert>
+
+    <update id="updateXK">
+        update xk set sid = #{xk.sid},
+                           sk_id = #{xk.skId},
+                           term = #{xk.term},
+                           score = #{xk.score}
+        where xk_id = #{xk.xkId}
+    </update>
+
+    <delete id="deleteXKByXKId">
+        delete from xk where xk_id = #{xkId};
+    </delete>
+    <delete id="deleteXKWithSid">
+        delete from xk where sid = #{sid};
+    </delete>
+
+    <select id="getXKByXKId" resultMap="XK">
+        select * from xk where xk_id = #{xkId};
+    </select>
+    <select id="getXKListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from xk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getXKListByLikeName" resultMap="XK">
+        select * from xk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+            limit #{startIndex},#{pageSize}
+    </select>
+    <select id="xkCountBySKId" resultType="java.lang.Integer">
+        select count(*) from xk where xk.sk_id = #{skId};
+    </select>
+
+    <select id="getXKListByLikeNameWithSid" resultMap="XK">
+        select * from xk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+            and xk.sid = #{sid}
+            limit #{startIndex},#{pageSize};
+    </select>
+    <select id="getXKListByLikeNameTotalWithSid" resultType="java.lang.Integer">
+        select count(*) from xk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+        and xk.sid = #{sid};
+    </select>
+    <select id="averageScoreFilterByCol" resultType="java.lang.String">
+        select avg(score) from xk where ${col} = #{likeName} and term = #{term} and xk.score != '暂无成绩'
+    </select>
+    <select id="highestScoreFilterByCol" resultMap="XK">
+        select * from xk where ${col} = #{likeName} and term = #{term} and xk.score != '暂无成绩' order by score DESC limit 0,1
+    </select>
+    <select id="lowestScoreFilterByCol" resultMap="XK">
+        select * from xk where ${col} = #{likeName} and term = #{term} and xk.score != '暂无成绩' order by score ASC limit 0,1
+    </select>
+    <select id="averageScoreByClazzFilterByCol" resultType="java.lang.String">
+        select avg(score) from xk,student where xk.sid = student.sid
+                                            and student.cid = #{likeName}
+                                            and xk.sk_id = #{skId} and xk.term = #{term} and xk.score != '暂无成绩'
+    </select>
+    <select id="highestScoreByClazzFilterByCol" resultMap="XK">
+        select * from xk,student where xk.sid = student.sid
+                                            and student.cid = #{likeName}
+                                            and xk.sk_id = #{skId} and xk.term = #{term} and xk.score != '暂无成绩'
+        order by score DESC
+        limit 0,1
+    </select>
+    <select id="lowestScoreByClazzFilterByCol" resultMap="XK">
+        select * from xk,student where xk.sid = student.sid
+                                   and student.cid = #{likeName}
+                                   and xk.sk_id = #{skId} and xk.term = #{term}
+        order by score ASC
+        limit 0,1
+    </select>
+    <select id="passRate" resultType="java.lang.String">
+        select (select count(*) from xk where xk.term = #{term} and xk.${col} = #{likeName} and xk.score >= 60 and xk.score != '暂无成绩') / (select count(*) from xk where xk.term = #{term} and xk.${col} = #{likeName} and xk.score != '暂无成绩') as passRate
+    </select>
+    <select id="passRateByClazz" resultType="java.lang.String">
+        select (select count(*) from xk,student where xk.sid = student.sid and student.cid = #{likeName} and xk.sk_id = #{skId} and xk.score >= 60 and xk.score != '暂无成绩')
+        / (select count(*) from xk,student where xk.sid = student.sid and student.cid = #{likeName} and xk.sk_id = #{skId} and xk.score != '暂无成绩') as passRate
+    </select>
+    <select id="getXKBySidAndSKId" resultMap="XK">
+        select * from xk where xk.sid = #{sid} and xk.sk_id = #{skId};
+    </select>
+</mapper>

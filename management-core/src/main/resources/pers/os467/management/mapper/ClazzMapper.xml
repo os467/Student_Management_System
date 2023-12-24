@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.ClazzMapper">
+
+
+    <resultMap id="Clazz" type="pers.os467.management.entity.Clazz">
+        <id property="cid" column="cid"></id>
+        <result property="num" column="num"></result>
+        <result property="grade" column="grade"></result>
+        <result property="clazzName" column="clazz_name"></result>
+    </resultMap>
+
+    <select id="getClazzNameByCid" resultType="java.lang.String">
+        select clazz_name from clazz where cid = #{cid};
+    </select>
+    <select id="getClazzList" resultMap="Clazz">
+        select * from clazz
+    </select>
+
+    <insert id="addClazz">
+        insert into clazz(
+            num,
+            grade,
+            clazz_name
+        )values (
+                    #{clazz.num},
+                    #{clazz.grade},
+                    #{clazz.clazzName}
+                );
+    </insert>
+
+    <update id="updateClazz">
+        update clazz set num = #{clazz.num},
+                         grade = #{clazz.grade},
+                         clazz_name = #{clazz.clazzName}
+        where cid = #{clazz.cid}
+    </update>
+
+    <delete id="deleteClazzByCid">
+        delete from clazz where cid = #{cid};
+    </delete>
+
+    <select id="getClazzTotal" resultType="java.lang.Integer">
+        select count(*) from clazz;
+    </select>
+    <select id="getClazzPageList" resultMap="Clazz">
+        select * from clazz limit #{startIndex},#{pageSize};
+    </select>
+    <select id="getClazzByCid" resultMap="Clazz">
+        select * from clazz where cid = #{cid};
+    </select>
+    <select id="getClazzListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from clazz where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getClazzListByLikeName" resultMap="Clazz">
+        select * from clazz where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+            limit #{startIndex},#{pageSize}
+    </select>
+</mapper>

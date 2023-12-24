@@ -1,0 +1,91 @@
+#app{
+    height: 98vh;
+    width: 99vw;
+    box-sizing: border-box;
+}
+html {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    width: 100%;
+    height: 100%;
+    background-image: url('../img/bg.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+body {
+    width: 100vw;
+    overflow: hidden;
+}
+
+.el-container{
+    height: 100%;
+}
+.el-header{
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+.el-aside{
+    width: 200px !important;
+    height: 100%;
+}
+.el-menu{
+    height: 100%;
+}
+.el-main{
+    height: 100%;
+    background-color: #ffffff;
+}
+.el-table{
+    height: 88%;
+}
+
+.el-row{
+    display: flex;
+    /*行间距*/
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.el-col{
+    display: flex;
+    height: 100%;
+}
+.el-col>*{
+    margin-left: auto;
+    margin-right: auto;
+    height: 100%;
+}
+.el-form{
+    margin-top: 10%;
+    width: 500px;
+    padding: 5%;
+    border-radius: 10px;
+    background-color: rgba(216,216,216,0.6);
+}
+h1{
+    font-size: 50px;
+}
+.el-select{
+    width: 100%;
+}
+
+/*disabled输入框字体颜色*/
+.el-input.is-disabled .el-input__inner {
+    color: #2c2c2c;
+}
+
+/*radio颜色*/
+.el-radio__input.is-checked .el-radio__inner {
+    border-color: #363434 !important;
+    background-color: #363434 !important;
+}
+/*radio颜色*/
+.el-radio__input.is-checked+.el-radio__label {
+    color: #363434 !important;
+}
+
+label{
+    color: #272727 !important;
+}

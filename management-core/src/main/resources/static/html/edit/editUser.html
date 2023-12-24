@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑用户</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+</head>
+<body>
+
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="用户名称">
+                    <el-input v-model="form.username"></el-input>
+                </el-form-item>
+
+                <el-form-item label="重置密码">
+                    <el-radio v-model="form.resetPassword"
+                              :label="true">是</el-radio>
+                    <el-radio v-model="form.resetPassword"
+                              :label="false">否</el-radio>
+                </el-form-item>
+
+                <el-form-item label="用户角色">
+                    <el-select v-model="form.rid" placeholder="请选择">
+                        <el-option
+                                v-for="item in roleList"
+                                :key="item.rid"
+                                :label="item.rname"
+                                :value="item.rid">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm">编辑</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+</div>
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../util/md5.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                form:{
+                    uid:null,
+                    username:null,
+                    resetPassword:false,
+                    rid:'',
+                },
+                roleList:[]
+            }
+        },
+        methods: {
+            getUserBySessionUid(){
+                let uid = sessionStorage.getItem("editUserId");
+                this.form.uid = uid;
+                axios.get(
+                    `${BACKEND_URL}/user/getUserByUid?uid=${uid}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.form.username = resp.data.data.username;
+                        this.form.rid = resp.data.data.rid;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+                //清除session域数据
+                sessionStorage.removeItem("editUserId");
+            },
+            getRoleList(){
+                axios.get(
+                    `${BACKEND_URL}/role/list`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.roleList = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] === ''){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                axios.post(
+                    `${BACKEND_URL}/user/update`,
+                    {
+                        uid:this.form.uid,
+                        username:this.form.username,
+                        resetPassword:this.form.resetPassword,
+                        rid:this.form.rid
+                    }
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '编辑成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/userList.html`;
+            }
+        },
+        mounted() {
+            this.getRoleList();
+            this.getUserBySessionUid();
+        },
+        created() {},
+    })
+</script>

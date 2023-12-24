@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加学生</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+</head>
+<body>
+
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="学生姓名">
+                    <el-input v-model="form.sname"></el-input>
+                </el-form-item>
+
+                <el-form-item label="学生班级">
+                    <el-select v-model="form.cid" placeholder="请选择">
+                        <el-option
+                                v-for="item in clazzList"
+                                :key="item.cid"
+                                :label="item.clazzName"
+                                :value="item.cid">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="学生性别">
+                    <el-radio v-model="form.sex"
+                              :label="1">男</el-radio>
+                    <el-radio v-model="form.sex"
+                              :label="2">女</el-radio>
+                </el-form-item>
+
+                <el-form-item label="出生日期">
+                    <el-input
+                            placeholder="请选择日期"
+                            type="date"
+                            v-model="form.birthday">
+                    </el-input>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="success" @click="submitForm">添加</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+</div>
+
+
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                form:{
+                    sname:null,
+                    cid:'',
+                    sex:null,
+                    birthday:null
+                },
+                createUser:false,
+                clazzList:[]
+            }
+        },
+        methods: {
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == ''){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                if (confirm("为学生创建账号?")){
+                    this.createUser = true;
+                }
+                axios.post(
+                    `${BACKEND_URL}/student/add?createUser=${this.createUser}`,
+                    this.form
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '添加成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            getClazzList(){
+                axios.get(
+                    `${BACKEND_URL}/clazz/list`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.clazzList = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/studentList.html`;
+            }
+        },
+        mounted() {
+            this.getClazzList();
+        },
+        created() {},
+    })
+</script>

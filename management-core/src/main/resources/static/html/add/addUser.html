@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加用户</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+</head>
+<body>
+
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="用户名称">
+                    <el-input v-model="form.username"></el-input>
+                </el-form-item>
+
+                <el-form-item label="用户密码">
+                    <el-input type="password" v-model="form.password"></el-input>
+                </el-form-item>
+
+                <el-form-item label="重复密码">
+                    <el-input type="password" v-model="confirmPassword"></el-input>
+                </el-form-item>
+
+                <el-form-item label="用户角色">
+                    <el-select v-model="form.rid" placeholder="请选择">
+                        <el-option
+                                v-for="item in roleList"
+                                :key="item.rid"
+                                :label="item.rname"
+                                :value="item.rid">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="success" @click="submitForm">添加</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+</div>
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../util/md5.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                confirmPassword:null,
+                form:{
+                    username:null,
+                    password:null,
+                    rid:'',
+                },
+                roleList:[]
+            }
+        },
+        methods: {
+            getRoleList(){
+                axios.get(
+                    `${BACKEND_URL}/role/list`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.roleList = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == ''){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                if (this.confirmPassword != this.form.password){
+                    this.$message({
+                        type: 'warning',
+                        message: '两次输入密码不一致!'
+                    });
+                    return;
+                }
+                axios.post(
+                    `${BACKEND_URL}/user/add`,
+                    {
+                        username:this.form.username,
+                        password:hex_md5(this.form.password),
+                        rid:this.form.rid
+                    }
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '添加成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/userList.html`;
+            }
+        },
+        mounted() {
+            this.getRoleList();
+        },
+        created() {},
+    })
+</script>

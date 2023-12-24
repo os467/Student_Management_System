@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑选课</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+    <link rel="stylesheet" href="../../css/modal.css">
+</head>
+<body>
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="选课学生">
+                    <el-row>
+                        <el-col :span="20">
+                            <el-input v-model="sname" :disabled="true"></el-input>
+                        </el-col>
+                        <el-col :span="2"></el-col>
+                        <el-col :span="3">
+                            <el-button class="toggleModal" @click="show('student')">选择学生</el-button>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item label="选择课程">
+                    <el-row>
+                        <el-col :span="20">
+                            <el-input v-model="skName" :disabled="true"></el-input>
+                        </el-col>
+                        <el-col :span="2"></el-col>
+                        <el-col :span="3">
+                            <el-button class="toggleModal" @click="show('sk')">选择授课</el-button>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item label="学期">
+                    <el-row>
+                        <el-col :span="19">
+                            <el-select v-model="form.term" placeholder="请选择">
+                                <el-option
+                                        v-for="item in termList"
+                                        :key="item.tid"
+                                        :label="item.term"
+                                        :value="item.term">
+                                </el-option>
+                            </el-select>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item label="分数">
+                    <el-row>
+                        <el-col :span="19">
+                            <el-input v-model="form.score"></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm">编辑</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+
+        </el-col>
+    </el-row>
+
+
+
+    <!--学生模态框-->
+    <div class="container">
+        <div class="modal" id="modal-student">
+            <div class="modal-header">
+                <p class="title"align="center">添加学生</p>
+                <p class="close" @click="close('student')">×</p>
+            </div>
+            <div class="modal-content">
+                <el-row>
+                    <el-col :span="6">
+                        <el-input
+                                v-model="student.likeName"
+                                size="mini"
+                                placeholder="查询">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-button size="mini" @click="searchStudent">
+                            <i class="el-icon-search"></i>查询
+                        </el-button>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-select size="mini" v-model="student.searchFlag" placeholder="请选择查询方式">
+                            <el-option
+                                    v-for="item in student.options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="3">
+
+                        <el-checkbox  v-model="student.precise" value="true">
+                            精确查询
+                        </el-checkbox>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-table
+                            height="250"
+                            :data="student.studentList"
+                            style="width: 100%">
+                        <el-table-column
+                                label="学号"
+                                prop="sid">
+                        </el-table-column>
+                        <el-table-column
+                                label="姓名"
+                                prop="sname">
+                        </el-table-column>
+                        <el-table-column
+                                label="性别"
+                                prop="sex">
+                        </el-table-column>
+                        <el-table-column
+                                label="班级号"
+                                prop="cid">
+                        </el-table-column>
+                        <el-table-column
+                                label="班级"
+                                prop="clazz">
+                        </el-table-column>
+                        <el-table-column
+                                label="出生日">
+                            <template slot-scope="scope">
+                                <i class="el-icon-time"></i>
+                                <span style="margin-left: 10px">{{ scope.row.birthday }}</span>
+                            </template>
+                        </el-table-column>
+
+                        <!--表头-->
+                        <el-table-column
+                                align="right">
+                            <template slot="header" slot-scope="scope">
+                                操作
+                            </template>
+
+                            <template slot-scope="scope">
+                                <el-button
+                                        size="mini"
+                                        type="success"
+                                        @click="bindStudent('student',scope.row.sid,scope.row.sname)">选择</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+
+                <el-row>
+                    <span>
+                            <span v-if="student.currentPage == 1">
+                                <el-button disabled>上一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getStudentPage(student.currentPage-1)">上一页</el-button>
+                            </span>
+                            <span>
+                                {{student.currentPage}}/{{student.lastPage}}
+                            </span>
+                            <span v-if="student.currentPage == student.lastPage || student.lastPage == 0">
+                                <el-button disabled>下一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getStudentPage(student.currentPage+1)">下一页</el-button>
+                            </span>
+                            分页条目数:
+                            <el-select v-model="student.pageSize" @change="getStudentPage(1)">
+                                <el-option :key="item.value"
+                                           :value="item.value"
+                                           :label="item.label"
+                                           v-for="item in student.pageSizeInterval"></el-option>
+                            </el-select>
+                         </span>
+                </el-row>
+            </div>
+            <div class="modal-footer">
+                <button class="close btn" @click="close('student')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!--授课模态框-->
+    <div class="container">
+        <div class="modal" id="modal-sk">
+            <div class="modal-header">
+                <p class="title"align="center">添加课程</p>
+                <p class="close" @click="close('sk')">×</p>
+            </div>
+            <div class="modal-content">
+                <el-row>
+                    <el-col :span="6">
+                        <el-input
+                                v-model="sk.likeName"
+                                size="mini"
+                                placeholder="查询">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-button size="mini" @click="searchSK">
+                            <i class="el-icon-search"></i>查询
+                        </el-button>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-select size="mini" v-model="sk.searchFlag" placeholder="请选择查询方式">
+                            <el-option
+                                    v-for="item in sk.options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="3">
+
+                        <el-checkbox  v-model="sk.precise" value="true">
+                            精确查询
+                        </el-checkbox>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-table
+                            height="250"
+                            :data="sk.skList"
+                            style="width: 100%">
+                        <el-table-column
+                                label="授课号"
+                                prop="skId">
+                        </el-table-column>
+                        <el-table-column
+                                label="授课课程"
+                                prop="lname">
+                        </el-table-column>
+                        <el-table-column
+                                label="授课教师"
+                                prop="tname">
+                        </el-table-column>
+
+                        <!--表头-->
+                        <el-table-column
+                                align="right">
+                            <template slot="header" slot-scope="scope">
+                                操作
+                            </template>
+
+                            <template slot-scope="scope">
+                                <el-button
+                                        size="mini"
+                                        type="success"
+                                        @click="bindSK('sk',scope.row.skId,scope.row.lname,scope.row.tname)">选择</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+
+                <el-row>
+                    <span>
+                            <span v-if="sk.currentPage == 1">
+                                <el-button disabled>上一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getSKPage(sk.currentPage-1)">上一页</el-button>
+                            </span>
+                            <span>
+                                {{sk.currentPage}}/{{sk.lastPage}}
+                            </span>
+                            <span v-if="sk.currentPage == sk.lastPage || sk.lastPage == 0">
+                                <el-button disabled>下一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getSKPage(sk.currentPage+1)">下一页</el-button>
+                            </span>
+                            分页条目数:
+                            <el-select v-model="sk.pageSize" @change="getSKPage(1)">
+                                <el-option :key="item.value"
+                                           :value="item.value"
+                                           :label="item.label"
+                                           v-for="item in sk.pageSizeInterval"></el-option>
+                            </el-select>
+                         </span>
+                </el-row>
+
+            </div>
+            <div class="modal-footer">
+                <button class="close btn" @click="close('sk')">关闭</button>
+            </div>
+        </div>
+        <div class="mask"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../js/reg.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                sname:null,
+                skName:null,
+                student:{
+                    /*page*/
+                    studentList:null,
+                    currentPage:null,
+                    pageSize:5,
+                    totalCount:null,
+                    lastPage:null,
+                    pageSizeInterval:[{value:5,label:5},{value:10,label:10},{value:15,label:15},{value:20,label:20}],
+
+                    /*search*/
+                    likeName:'',
+                    searchFlag:'snameFlag',
+                    precise:false,
+                    options:[
+                        {value:'sidFlag',label:'学号'},
+                        {value:'clazzFlag',label:'班号'},
+                        {value:'snameFlag',label:'学生名'}
+                    ]
+                },
+                sk:{
+                    /*page*/
+                    skList:null,
+                    currentPage:null,
+                    pageSize:5,
+                    totalCount:null,
+                    lastPage:null,
+                    pageSizeInterval:[{value:5,label:5},{value:10,label:10},{value:15,label:15},{value:20,label:20}],
+
+                    /*search*/
+                    likeName:'',
+                    searchFlag:'lidFlag',
+                    precise:false,
+                    options:[
+                        {value:'skIdFlag',label:'授课号'},
+                        {value:'lidFlag',label:'课程号'},
+                        {value: 'tidFlag',label:'教师号'}
+                    ]
+                },
+                form:{
+                    xkId:null,
+                    sid:null,
+                    skId:null,
+                    term:null,
+                    score:null
+                },
+                termList:null
+            }
+        },
+        methods: {
+            show(modalName){
+                let mask = document.getElementsByClassName("mask")[0];
+                let modal = document.getElementById(`modal-${modalName}`);
+                mask.style.display = "block";
+                modal.style.display = "block";
+            },
+            close(modalName){
+                let mask = document.getElementsByClassName("mask")[0];
+                let modal = document.getElementById(`modal-${modalName}`);
+                mask.style.display = "none";
+                modal.style.display = "none";
+            },
+            bindStudent(modalName,sid,sname){
+                this.form.sid = sid;
+                this.sname = sname;
+                this.close(modalName);
+            },
+            bindSK(modalName,skId,lname,tname){
+                this.form.skId = skId;
+                this.skName = lname+"  "+tname;
+                this.close(modalName);
+            },
+            searchStudent(){
+                axios.post(
+                    `${BACKEND_URL}/student/search?currentPage=${this.student.currentPage}&pageSize=${this.student.pageSize}&likeName=${this.student.likeName}&flag=${this.student.searchFlag}&precise=${this.student.precise}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.student.studentList = resp.data.data.dataList;
+                        this.student.totalCount = resp.data.data.totalCount;
+                        this.student.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            searchSK(){
+                axios.post(
+                    `${BACKEND_URL}/sk/search?currentPage=${this.sk.currentPage}&pageSize=${this.sk.pageSize}&likeName=${this.sk.likeName}&flag=${this.sk.searchFlag}&precise=${this.sk.precise}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.sk.skList = resp.data.data.dataList;
+                        this.sk.totalCount = resp.data.data.totalCount;
+                        this.sk.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            initTermList(){
+                axios.get(
+                    `${BACKEND_URL}/term/withinFourYears`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.termList = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            initStudentList(){
+                this.student.studentList = [];
+                this.getStudentPage(1);
+            },
+            initSKList(){
+                this.sk.skList = [];
+                this.getSKPage(1);
+            },
+            getStudentPage(page){
+                this.student.currentPage = page;
+                if (this.student.likeName != null){
+                    this.searchStudent();
+                    return;
+                }
+            },
+            getSKPage(page){
+                this.sk.currentPage = page;
+                if (this.sk.likeName != null){
+                    this.searchSK();
+                    return;
+                }
+                axios.get(
+                    `${BACKEND_URL}/sk/list?currentPage=${this.sk.currentPage}&pageSize=${this.sk.pageSize}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.sk.skList = resp.data.data.dataList;
+                        this.sk.totalCount = resp.data.data.totalCount;
+                        this.sk.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            getXKBySessionXKid(){
+                let xkId = sessionStorage.getItem("editXKId");
+                this.form.xkId = xkId;
+                axios.get(
+                    `${BACKEND_URL}/xk/getXKByXKId?xkId=${xkId}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.sname = resp.data.data.sname;
+                        this.skName = resp.data.data.lname + " " + resp.data.data.tname;
+                        this.form.sid = resp.data.data.sid;
+                        this.form.skId = resp.data.data.skId;
+                        this.form.term = resp.data.data.term;
+                        this.form.score = resp.data.data.score;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+                //清除session域数据
+                sessionStorage.removeItem("editXKId");
+            },
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == -1){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                if (!REG_TOOL.score(this.form.score)){
+                    this.$message({
+                        type: 'warning',
+                        message: '成绩格式非法!'
+                    });
+                    return;
+                }
+                axios.post(
+                    `${BACKEND_URL}/xk/update`,
+                    this.form
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '编辑成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/xkList.html`;
+            }
+        },
+        mounted() {
+            this.initTermList();
+            this.initStudentList();
+            this.initSKList();
+            this.getXKBySessionXKid();
+        },
+        created() {},
+    })
+</script>

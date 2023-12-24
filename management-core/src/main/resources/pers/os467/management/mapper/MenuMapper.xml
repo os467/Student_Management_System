@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.MenuMapper">
+
+
+    <select id="getMenuList" resultType="pers.os467.management.entity.Menu">
+        select * from menu m left join role_menu rm on m.mid = rm.mid
+        where rm.rid = #{rid}
+    </select>
+
+</mapper>

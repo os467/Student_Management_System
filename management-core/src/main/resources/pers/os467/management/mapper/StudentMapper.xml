@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.StudentMapper">
+    <insert id="addStudent">
+        insert into student(
+                            <if test="student.sid != null">
+                                sid,
+                            </if>
+                            sname,
+                            cid,
+                            sex,
+                            birthday
+        )values (
+                <if test="student.sid != null">
+                 #{student.sid},
+                </if>
+                 #{student.sname},
+                 #{student.cid},
+                 #{student.sex},
+                 #{student.birthday}
+                        );
+    </insert>
+
+    <update id="updateStudent">
+        update student set sname = #{student.sname},
+                           cid = #{student.cid},
+                           sex = #{student.sex},
+                           birthday = #{student.birthday}
+        where sid = #{student.sid}
+    </update>
+
+    <delete id="deleteStudentBySid">
+        delete from student where sid = #{sid};
+    </delete>
+
+
+    <select id="getStudentTotal" resultType="java.lang.Integer">
+        select count(*) from student;
+    </select>
+    <select id="getStudentList" resultType="pers.os467.management.entity.Student">
+        select * from student limit #{startIndex},#{pageSize};
+    </select>
+    <select id="getStudentBySid" resultType="pers.os467.management.entity.Student">
+        select * from student where sid = #{sid};
+    </select>
+    <select id="getStudentListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from student where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getStudentListByLikeName" resultType="pers.os467.management.entity.Student">
+        select * from student where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+         limit #{startIndex},#{pageSize}
+    </select>
+    <select id="getStudentHighestSidByCid" resultType="java.lang.Integer">
+        select sid from student where cid = #{cid} order by sid DESC limit 0,1;
+    </select>
+</mapper>
