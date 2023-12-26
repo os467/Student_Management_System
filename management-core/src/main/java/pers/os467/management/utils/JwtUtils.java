@@ -14,10 +14,8 @@ import java.util.Objects;
  * 一个简单的jwt工具
  * by os467
  */
-@Component
 public class JwtUtils {
 
-    @Value("jwt.key")
     public static String key;
 
     public static String generateToken(JwtUser jwtUser){

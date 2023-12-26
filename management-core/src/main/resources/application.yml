@@ -23,7 +23,3 @@ debug: false
 #图床路径，通过src引用无跨域限制 src = img-base-url + 系统路径分隔符 + 图像文件名
 #nginx代理后位置
 img-base-url: http://localhost:8080/image
-
-#jwt相关
-jwt:
-  key: 123
