@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public class JwtUtils {
 
-    public static String key;
+    public static String key = "123";
 
     public static String generateToken(JwtUser jwtUser){
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
