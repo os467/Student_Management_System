@@ -70,6 +70,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         //缓存登录用户信息到session域
         request.getSession().setAttribute(Constant.JWT_USER,jwtUser);
 
+
+
         filterChain.doFilter(request,response);
 
     }

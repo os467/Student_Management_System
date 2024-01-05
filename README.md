@@ -210,7 +210,7 @@ SpringBoot**【2】**，SpringMVC，MyBatis，Jwt
 
 **数据增加页面**
 
- ![image-20231224214727640](images/image-20231224214727640.png)
+![image-20231224214727640](images/image-20231224214727640.png)
 
 **图** **3****数据增加**
 
@@ -230,7 +230,7 @@ SpringBoot**【2】**，SpringMVC，MyBatis，Jwt
 
 **数据修改页面**
 
- ![image-20231224214732010](images/image-20231224214732010.png)
+![image-20240105142730656](images/image-20240105142730656.png)
 
 图 4数据修改
 
