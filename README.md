@@ -229,7 +229,8 @@ SpringBoot**【2】**，SpringMVC，MyBatis，Jwt
  
 
 **数据修改页面**
-![image-20240105141135323](images/image-20240105141135323.png)
+
+![image-20240105141135323](images/image-20240105141135323.png) <br/>
 
 **图** **4****数据修改**
 
