@@ -229,9 +229,9 @@ SpringBoot**【2】**，SpringMVC，MyBatis，Jwt
  
 
 **数据修改页面**
-<img src="images/image-20231224214759999.png" alt="image-20231224214732010" style="zoom:200%;" />
+![image-20240105141135323](images/image-20240105141135323.png)
 
-图 4数据修改
+**图** **4****数据修改**
 
  
 
