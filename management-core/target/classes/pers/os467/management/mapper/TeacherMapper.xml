@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.TeacherMapper">
+    <insert id="addTeacher">
+        insert into teacher(
+                            tname,
+                            sex,
+                            birthday
+        )values (
+                 #{teacher.tname},
+                 #{teacher.sex},
+                 #{teacher.birthday}
+                        );
+    </insert>
+
+    <update id="updateTeacher">
+        update teacher set tname = #{teacher.tname},
+                           sex = #{teacher.sex},
+                           birthday = #{teacher.birthday}
+        where tid = #{teacher.tid}
+    </update>
+
+    <delete id="deleteTeacherByTid">
+        delete from teacher where tid = #{tid};
+    </delete>
+
+    <select id="getTeacherByTid" resultType="pers.os467.management.entity.Teacher">
+        select * from teacher where tid = #{tid};
+    </select>
+    <select id="getTeacherListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from teacher where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getTeacherListByLikeName" resultType="pers.os467.management.entity.Teacher">
+        select * from teacher where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+        limit #{startIndex},#{pageSize}
+    </select>
+</mapper>

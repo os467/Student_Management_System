@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加授课</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+    <link rel="stylesheet" href="../../css/modal.css">
+</head>
+<body>
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+
+                <el-form-item label="选择教师">
+                    <el-row>
+                        <el-col :span="20">
+                            <el-input v-model="tname" :disabled="true"></el-input>
+                        </el-col>
+                        <el-col :span="2"></el-col>
+                        <el-col :span="3">
+                            <el-button class="toggleModal" @click="show('teacher')">选择教师</el-button>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item label="选择课程">
+                    <el-row>
+                        <el-col :span="20">
+                            <el-input v-model="lname" :disabled="true"></el-input>
+                        </el-col>
+                        <el-col :span="2"></el-col>
+                        <el-col :span="3">
+                            <el-button class="toggleModal" @click="show('lesson')">选择课程</el-button>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="success" @click="submitForm">添加</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+
+        </el-col>
+    </el-row>
+
+
+
+    <!--教师模态框-->
+    <div class="container">
+        <div class="modal" id="modal-teacher">
+            <div class="modal-header">
+                <p class="title"align="center">添加教师</p>
+                <p class="close" @click="close('teacher')">×</p>
+            </div>
+            <div class="modal-content">
+                <el-row>
+                    <el-col :span="6">
+                        <el-input
+                                v-model="teacher.likeName"
+                                size="mini"
+                                placeholder="查询">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-button size="mini" @click="searchTeacher">
+                            <i class="el-icon-search"></i>查询
+                        </el-button>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-select size="mini" v-model="teacher.searchFlag" placeholder="请选择查询方式">
+                            <el-option
+                                    v-for="item in teacher.options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="3">
+
+                        <el-checkbox  v-model="teacher.precise" value="true">
+                            精确查询
+                        </el-checkbox>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-table
+                            height="250"
+                            :data="teacher.teacherList"
+                            style="width: 100%">
+                        <el-table-column
+                                label="教师号"
+                                prop="tid">
+                        </el-table-column>
+                        <el-table-column
+                                label="姓名"
+                                prop="tname">
+                        </el-table-column>
+                        <el-table-column
+                                label="性别"
+                                prop="sex">
+                        </el-table-column>
+                        <el-table-column
+                                label="出生日">
+                            <template slot-scope="scope">
+                                <i class="el-icon-time"></i>
+                                <span style="margin-left: 10px">{{ scope.row.birthday }}</span>
+                            </template>
+                        </el-table-column>
+
+                        <!--表头-->
+                        <el-table-column
+                                align="right">
+                            <template slot="header" slot-scope="scope">
+                                操作
+                            </template>
+
+                            <template slot-scope="scope">
+                                <el-button
+                                        size="mini"
+                                        type="success"
+                                        @click="bindTeacher('teacher',scope.row.tid,scope.row.tname)">选择</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+
+                <el-row>
+                    <span>
+                            <span v-if="teacher.currentPage == 1">
+                                <el-button disabled>上一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getTeacherPage(teacher.currentPage-1)">上一页</el-button>
+                            </span>
+                            <span>
+                                {{teacher.currentPage}}/{{teacher.lastPage}}
+                            </span>
+                            <span v-if="teacher.currentPage == teacher.lastPage || teacher.lastPage == 0">
+                                <el-button disabled>下一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getTeacherPage(teacher.currentPage+1)">下一页</el-button>
+                            </span>
+                            分页条目数:
+                            <el-select v-model="teacher.pageSize" @change="getTeacherPage(1)">
+                                <el-option :key="item.value"
+                                           :value="item.value"
+                                           :label="item.label"
+                                           v-for="item in teacher.pageSizeInterval"></el-option>
+                            </el-select>
+                         </span>
+                </el-row>
+            </div>
+            <div class="modal-footer">
+                <button class="close btn" @click="close('teacher')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!--课程模态框-->
+    <div class="container">
+        <div class="modal" id="modal-lesson">
+            <div class="modal-header">
+                <p class="title"align="center">添加课程</p>
+                <p class="close" @click="close('lesson')">×</p>
+            </div>
+            <div class="modal-content">
+                <el-row>
+                    <el-col :span="6">
+                        <el-input
+                                v-model="lesson.likeName"
+                                size="mini"
+                                placeholder="查询">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-button size="mini" @click="searchLesson">
+                            <i class="el-icon-search"></i>查询
+                        </el-button>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-select size="mini" v-model="lesson.searchFlag" placeholder="请选择查询方式">
+                            <el-option
+                                    v-for="item in lesson.options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="3">
+
+                        <el-checkbox  v-model="lesson.precise" value="true">
+                            精确查询
+                        </el-checkbox>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-table
+                            height="250"
+                            :data="lesson.lessonList"
+                            style="width: 100%">
+                        <el-table-column
+                                label="课程号"
+                                prop="lid">
+                        </el-table-column>
+                        <el-table-column
+                                label="课程名"
+                                prop="lname">
+                        </el-table-column>
+                        <el-table-column
+                                label="学时">
+                            <template slot-scope="scope">
+                                <i class="el-icon-date"></i>
+                                <span style="margin-left: 10px">{{ scope.row.hours }}</span>
+                            </template>
+                        </el-table-column>
+
+                        <!--表头-->
+                        <el-table-column
+                                align="right">
+                            <template slot="header" slot-scope="scope">
+                                操作
+                            </template>
+
+                            <template slot-scope="scope">
+                                <el-button
+                                        size="mini"
+                                        type="success"
+                                        @click="bindLesson('lesson',scope.row.lid,scope.row.lname)">选择</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+
+                <el-row>
+                    <span>
+                            <span v-if="lesson.currentPage == 1">
+                                <el-button disabled>上一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getLessonPage(lesson.currentPage-1)">上一页</el-button>
+                            </span>
+                            <span>
+                                {{lesson.currentPage}}/{{lesson.lastPage}}
+                            </span>
+                            <span v-if="lesson.currentPage == lesson.lastPage || lesson.lastPage == 0">
+                                <el-button disabled>下一页</el-button>
+                            </span>
+                            <span v-else>
+                                <el-button @click="getLessonPage(lesson.currentPage+1)">下一页</el-button>
+                            </span>
+                            分页条目数:
+                            <el-select v-model="lesson.pageSize" @change="getLessonPage(1)">
+                                <el-option :key="item.value"
+                                           :value="item.value"
+                                           :label="item.label"
+                                           v-for="item in lesson.pageSizeInterval"></el-option>
+                            </el-select>
+                         </span>
+                </el-row>
+
+            </div>
+            <div class="modal-footer">
+                <button class="close btn" @click="close('lesson')">关闭</button>
+            </div>
+        </div>
+        <div class="mask"></div>
+    </div>
+
+</div>
+
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                tname:null,
+                lname:null,
+                lesson:{
+                    /*page*/
+                    lessonList:null,
+                    currentPage:null,
+                    pageSize:5,
+                    totalCount:null,
+                    lastPage:null,
+                    pageSizeInterval:[{value:5,label:5},{value:10,label:10},{value:15,label:15},{value:20,label:20}],
+
+                    /*search*/
+                    likeName:'',
+                    searchFlag:'lidFlag',
+                    precise:false,
+                    options:[
+                        {value:'lidFlag',label:'课程号'},
+                        {value:'lnameFlag',label:'课程名'}
+                    ]
+                },
+                teacher:{
+                    /*page*/
+                    teacherList:null,
+                    currentPage:null,
+                    pageSize:5,
+                    totalCount:null,
+                    lastPage:null,
+                    pageSizeInterval:[{value:5,label:5},{value:10,label:10},{value:15,label:15},{value:20,label:20}],
+
+                    /*search*/
+                    searchFlag:'tidFlag',
+                    likeName:'',
+                    precise:false,
+                    options:[
+                        {value:'tidFlag',label:'教师号'},
+                        {value:'tnameFlag',label:'姓名'}
+                    ]
+                },
+                form:{
+                    tid:null,
+                    lid:null,
+                }
+            }
+        },
+        methods: {
+            show(modalName){
+                let mask = document.getElementsByClassName("mask")[0];
+                let modal = document.getElementById(`modal-${modalName}`);
+                mask.style.display = "block";
+                modal.style.display = "block";
+            },
+            close(modalName){
+                let mask = document.getElementsByClassName("mask")[0];
+                let modal = document.getElementById(`modal-${modalName}`);
+                mask.style.display = "none";
+                modal.style.display = "none";
+            },
+            bindLesson(modalName,lid,lname){
+                this.form.lid = lid;
+                this.lname = lname;
+                this.close(modalName);
+            },
+            bindTeacher(modalName,tid,tname){
+                this.form.tid = tid;
+                this.tname = tname;
+                this.close(modalName);
+            },
+            searchLesson(){
+                axios.post(
+                    `${BACKEND_URL}/lesson/search?currentPage=${this.lesson.currentPage}&pageSize=${this.lesson.pageSize}&likeName=${this.lesson.likeName}&flag=${this.lesson.searchFlag}&precise=${this.lesson.precise}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.lesson.lessonList = resp.data.data.dataList;
+                        this.lesson.totalCount = resp.data.data.totalCount;
+                        this.lesson.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            searchTeacher(){
+                axios.post(
+                    `${BACKEND_URL}/teacher/search?currentPage=${this.teacher.currentPage}&pageSize=${this.teacher.pageSize}&likeName=${this.teacher.likeName}&flag=${this.teacher.searchFlag}&precise=${this.teacher.precise}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.teacher.teacherList = resp.data.data.dataList;
+                        this.teacher.totalCount = resp.data.data.totalCount;
+                        this.teacher.lastPage = resp.data.data.lastPage;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            initLessonList(){
+                this.lesson.lessonList = [];
+                this.getLessonPage(1);
+            },
+            initTeacherList(){
+                this.teacher.teacherList = [];
+                this.getTeacherPage(1);
+            },
+            getLessonPage(page){
+                this.lesson.currentPage = page;
+                if (this.lesson.likeName != null){
+                    this.searchLesson();
+                    return;
+                }
+            },
+            getTeacherPage(page){
+                this.teacher.currentPage = page;
+                if (this.teacher.likeName != null){
+                    this.searchTeacher();
+                    return;
+                }
+            },
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == -1){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                axios.post(
+                    `${BACKEND_URL}/sk/add`,
+                    this.form
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '添加成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/skList.html`;
+            }
+        },
+        mounted() {
+            this.initLessonList();
+            this.initTeacherList();
+        },
+        created() {},
+    })
+</script>

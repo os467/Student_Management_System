@@ -1,0 +1,25 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      force: true
+spring:
+  application:
+    name: management
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://localhost:3306/student_system?characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    driver: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      #图床位置根目录下位置
+      location: D:\pythonschool\PY_lab\LocalGitHub\Student_Management_System\images
+debug: false
+#logging:
+  #level:
+    #pers.os467.management.mapper: debug
+
+#图床路径，通过src引用无跨域限制 src = img-base-url + 系统路径分隔符 + 图像文件名
+#nginx代理后位置
+img-base-url: http://localhost:8080/image

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.SystemMsgMapper">
+
+    <resultMap id="SystemMsg" type="pers.os467.management.entity.SystemMsg">
+        <id column="id" property="id"></id>
+        <result column="title" property="title"></result>
+        <result column="context" property="context"></result>
+        <result column="send_time" property="sendTime"></result>
+        <result column="send_uid" property="sendUid"></result>
+        <result column="receive_rid" property="receiveRid"></result>
+    </resultMap>
+
+    <insert id="addSystemMsg" useGeneratedKeys="true" keyProperty="id">
+        insert into system_msg(`title`,`context`,`send_time`,`send_uid`,`receive_rid`)
+        values(#{systemMsg.title},#{systemMsg.context},#{systemMsg.sendTime},#{systemMsg.sendUid},#{systemMsg.receiveRid});
+    </insert>
+
+    <select id="getSystemMsgMap" resultMap="SystemMsg" parameterType="java.util.Map">
+        select * from system_msg where id in
+        <foreach collection="idList" open="(" close=")" separator="," item="id" index="index">
+            #{id}
+        </foreach>
+    </select>
+
+
+</mapper>

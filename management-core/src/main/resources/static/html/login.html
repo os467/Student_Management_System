@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录界面</title>
+    <link rel="stylesheet" href="../css/element.css">
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+
+<div id="app">
+
+
+
+    <el-row>
+        <el-col>
+            <el-form ref="form" :model="form" label-width="80px">
+
+                <el-row>
+                    <el-col :span="1"></el-col>
+                    <el-col>
+                        <el-avatar :size="100" :src="circleUrl"></el-avatar>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-col :span="5">
+                    </el-col>
+                    <el-col :span="3">
+                        <i class="el-icon-s-custom"></i>
+                    </el-col>
+                    <el-col :span="10">
+                        <el-input v-model="form.username" @change="searchAvatarUrl" placeholder="用户名" round></el-input>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-col :span="5">
+                    </el-col>
+                    <el-col :span="3">
+                        <i class="el-icon-lock"></i>
+                    </el-col>
+                    <el-col :span="10">
+                        <el-input v-model="form.password" type="password" placeholder="密码" round></el-input>
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-col :span="8">
+                    </el-col>
+                    <el-col :span="10">
+                        <el-button size="mini" @click="login" round>
+                            <i class="el-icon-right"></i>
+                        </el-button>
+                    </el-col>
+                </el-row>
+
+            </el-form>
+        </el-col>
+    </el-row>
+</div>
+
+</body>
+</html>
+
+<script src="../util/vue.js"></script>
+<script src="../util/axios.js"></script>
+<script src="../util/md5.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/myaxios.js"></script>
+<script src="../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                circleUrl:'https://img.zcool.cn/community/01cfd95d145660a8012051cdb52093.png@1280w_1l_2o_100sh.png',
+                form:{
+                  username:null,
+                  password:null
+                },
+                title:`${TITLE}`,
+            }
+        },
+        methods: {
+            login(){
+                for (const key in this.form) {
+                    if (this.form[key] == null){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                let password = this.form.password;
+                axios.post(`${BACKEND_URL}/user/login`,
+                    {
+                        username:this.form.username,
+                        password:hex_md5(password)
+                    }
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        //登录成功
+                        sessionStorage.setItem(KEY_USERNAME,resp.data.data.username);
+                        sessionStorage.setItem(KEY_AVATAR_URL,resp.data.data.avatarUrl);
+                        sessionStorage.setItem(KEY_USER_ROLE,resp.data.data.role);
+                        location.href=`${BACKEND_URL}/html/list/studentList.html`;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        //登录失败
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            searchAvatarUrl(){
+                axios.get(`${BACKEND_URL}/user/searchAvatarUrl?username=${this.form.username}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        //获取图像成功searchAvatarUrl
+                        this.circleUrl = resp.data.data;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        //获取失败
+                        this.$message.error(resp.data.msg);
+                    }
+                });
+            },
+            toRegister(){
+                location.href=`${BACKEND_URL}/html/register.html`;
+            }
+        },
+        mounted() {
+        },
+        created() {},
+    })
+
+
+
+</script>

@@ -1,0 +1,119 @@
+#app{
+    height: 98vh;
+    width: 99vw;
+    box-sizing: border-box;
+}
+html {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+}
+body {
+    width: 100vw;
+    overflow: hidden;
+}
+
+.el-container{
+    height: 100%;
+}
+.el-header{
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+.el-aside{
+    width: 200px !important;
+    height: 100%;
+}
+
+.marker-class-name {
+    display: none;
+}
+
+.el-icon-delete{
+    color: #838282;
+}
+
+.el-icon-delete:hover{
+    color: #000000;
+}
+
+.newMsg{
+    position: absolute;
+    top: 0;
+}
+.msgAsideTitlePadding{
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.msgAsideTitle{
+    color: #3b3939;
+}
+
+
+.msgAsideDiv{
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
+    cursor: pointer;
+    position: relative;
+    margin-right: 10px;
+    margin-left: 10px;
+    background-color: #eceff3;
+    border-radius: 5px;
+}
+
+#msgContainer{
+    height: 350px !important;
+}
+
+#msgAside{
+    background-color: #ffffff;
+    width: 250px !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow: auto;
+}
+
+.el-menu{
+    height: 100%;
+}
+.el-main{
+    height: 100%;
+    background-color: #ffffff;
+}
+.el-table{
+    height: 88%;
+}
+
+.el-row{
+    display: flex;
+    /*行间距*/
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.el-col{
+    display: flex;
+}
+.el-col>*{
+    margin: auto;
+}
+
+h1{
+    font-size: 30px;
+}
+
+.menu-icon{
+    font-size: 20px;
+}
+.menu-icon:hover{
+    cursor:pointer;
+}
+
+.el-popover__content div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+

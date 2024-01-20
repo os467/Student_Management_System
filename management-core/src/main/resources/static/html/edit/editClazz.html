@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑班级</title>
+    <link rel="stylesheet" href="../../css/element.css">
+    <link rel="stylesheet" href="../../css/form.css">
+</head>
+<body>
+
+<div id="app">
+
+    <el-row>
+        <el-col>
+
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="班级名称">
+                    <el-input v-model="form.clazzName"></el-input>
+                </el-form-item>
+
+                <el-form-item label="所在年级">
+                    <el-select v-model="form.grade" placeholder="请选择">
+                        <el-option
+                                v-for="item in gradeOptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm">编辑</el-button>
+                    <el-button @click="back">取消</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+</div>
+
+</body>
+</html>
+
+<script src="../../util/vue.js"></script>
+<script src="../../util/axios.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/myaxios.js"></script>
+<script src="../../util/element.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                lock:false,
+                gradeOptions:[
+                    {label:1,value:1},
+                    {label:2,value:2},
+                    {label:3,value:3},
+                    {label:4,value:4}
+                ],
+                form:{
+                    cid:null,
+                    clazzName:null,
+                    grade:'',
+                }
+            }
+        },
+        methods: {
+            getClazzBySessionCid(){
+                let cid = sessionStorage.getItem("editClazzId");
+                this.form.cid = cid;
+                axios.get(
+                    `${BACKEND_URL}/clazz/getClazzByCid?cid=${cid}`
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.form.clazzName = resp.data.data.clazzName;
+                        this.form.grade = resp.data.data.grade;
+                        this.form.cid = resp.data.data.cid;
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+                //清除session域数据
+                sessionStorage.removeItem("editClazzId");
+            },
+            submitForm(){
+                if (this.lock){
+                    this.$message({
+                        type: 'warning',
+                        message: '请勿重复提交表单'
+                    });
+                    return;
+                }else{
+                    //上锁
+                    this.lock = true;
+                    //解锁
+                    setTimeout(()=>{this.lock = false},UNLOCK_TIMEOUT);
+                }
+                //检查表单是否有空项，有空则开启检查，且返回
+                for (const key in this.form) {
+                    if (this.form[key] == null || this.form[key] == ''){
+                        this.$message({
+                            type: 'warning',
+                            message: '存在未填写的项!'
+                        });
+                        return;
+                    }
+                }
+                axios.post(
+                    `${BACKEND_URL}/clazz/update`,
+                    this.form
+                ).then((resp)=>{
+                    if (resp.data.code === STATUS_CODE_SUCCESS){
+                        this.$message({
+                            type: 'success',
+                            message: '编辑成功'
+                        });
+                        setTimeout(()=>{this.back();},BACK_TIMEOUT);
+                    }
+                    if (resp.data.code === STATUS_CODE_FAIL){
+                        this.$message.error(resp.data.msg);
+                    }
+                })
+            },
+            back(){
+                location.href=`${BACKEND_URL}/html/list/clazzList.html`;
+            }
+        },
+        mounted() {
+            this.getClazzBySessionCid()
+        },
+        created() {},
+    })
+</script>

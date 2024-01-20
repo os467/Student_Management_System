@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.os467.management.mapper.SKMapper">
+    <resultMap id="SK" type="pers.os467.management.entity.SK">
+        <id property="skId" column="sk_id"></id>
+        <result property="lid" column="lid"></result>
+        <result property="tid" column="tid"></result>
+    </resultMap>
+    <insert id="addSK">
+        insert into sk(
+            tid,
+            lid
+        )values (
+                    #{sk.tid},
+                    #{sk.lid}
+                );
+    </insert>
+
+    <update id="updateSK">
+        update sk set tid = #{sk.tid},
+                           lid = #{sk.lid}
+        where sk_id = #{sk.skId}
+    </update>
+    <select id="skCountByTid" resultType="java.lang.Integer">
+        select count(*) from sk where sk.tid = #{tid}
+    </select>
+
+    <delete id="deleteSKBySKId">
+        delete from sk where sk_id = #{skId};
+    </delete>
+
+    <select id="getSKTotal" resultType="java.lang.Integer">
+        select count(*) from sk;
+    </select>
+    <select id="getSKList" resultMap="SK">
+        select * from sk limit #{startIndex},#{pageSize};
+    </select>
+    <select id="getSKBySKId" resultMap="SK">
+        select * from sk where sk_id = #{skId};
+    </select>
+    <select id="getSKListByLikeNameTotal" resultType="java.lang.Integer">
+        select count(*) from sk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+    </select>
+    <select id="getSKListByLikeName" resultMap="SK">
+        select * from sk where ${col}
+        <if test="!precise">
+            like concat('%',#{likeName},'%')
+        </if>
+        <if test="precise">
+            = #{likeName}
+        </if>
+            limit #{startIndex},#{pageSize}
+    </select>
+    <select id="skCountByLid" resultType="java.lang.Integer">
+        select count(*) from sk where sk.lid = #{lid};
+    </select>
+    <select id="getSKByTidAndLid" resultMap="SK">
+        select * from sk where sk.tid = #{tid} and sk.lid = #{lid};
+    </select>
+</mapper>
