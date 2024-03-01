@@ -1,6 +1,8 @@
 # Student_Management_System
 A student management system based on Springboot and Vue.
 
+# 查看本目录下的jar文件夹readme.md，两步即可启动项目
+
 # 一、数据库管理系统及背景
 
 ## 1.1作业选题
